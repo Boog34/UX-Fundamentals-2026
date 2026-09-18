@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2933;background:#eef1f4}
+[hidden]{display:none !important}
+button{font:inherit}
+.pair{display:flex;min-height:100vh}
+.column{flex:1 1 0;min-width:0;padding:20px 32px;display:flex;flex-direction:column}
+.rule{flex:0 0 1px;background:#b8c1cc}
+.caption{font-size:18px;color:#5b6773;margin:0 0 12px}
+.stage{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:20px 24px;position:relative}
+.restart{align-self:flex-start;margin-top:14px;background:none;border:0;padding:4px 0;font-size:18px;color:#3a5a8c;text-decoration:underline;cursor:pointer}
+.primary{background:#2f5fd0;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:18px;cursor:pointer}
+h2{margin:0 0 12px;font-size:24px}
+.fieldLabel{display:block;margin-bottom:6px}
+.textField{display:block;width:100%;font:inherit;padding:9px 12px;border:1px solid #9aa5b1;border-radius:8px;background:#fff;color:inherit}
+.fieldArea{margin-bottom:14px}
+.calendar{border:1px solid #9aa5b1;border-radius:8px;padding:10px}
+.monthName{text-align:center;font-weight:600;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dayName{text-align:center;color:#5b6773}
+.day{height:40px;padding:0;border:1px solid #c5ced7;border-radius:6px;background:#fff;color:#1f2933;cursor:pointer;font-size:18px;line-height:1.1}
+.day small{display:block;font-size:18px}
+.day:disabled{background:#eceff2;color:#a9b2bc;border-color:#eceff2;cursor:not-allowed}
+.day.picked{background:#2f5fd0;border-color:#2f5fd0;color:#fff}
+.msg{margin:12px 0 0;min-height:27px;color:#c62828}
+.msg.ok{color:#2e7d32}
+</style>
+</head>
+<body>
+<div class="pair">
+  <section class="column" id="panelA"></section>
+  <div class="rule"></div>
+  <section class="column" id="panelB"></section>
+</div>
+<script>
+function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fmt(d) { return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
+
+function parseText(text) {
+  var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(text);
+  if (!m) return null;
+  var day = Number(m[1]), month = Number(m[2]), year = Number(m[3]);
+  var d = new Date(2000, 0, 1);
+  d.setFullYear(year, month - 1, day);
+  d.setHours(0, 0, 0, 0);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  return d;
+}
+
+// build one panel; opts.usePicker decides between a text field and a calendar
+function createPanel(root, opts) {
+  var today, lastDay, picked;
+
+  function isValid(d) { return !isWeekend(d) && d >= today && d <= lastDay; }
+
+  function firstValid() {
+    var d = today;
+    while (!isValid(d)) d = addDays(d, 1);
+    return d;
+  }
+
+  function render() {
+    today = dayStart(new Date());
+    lastDay = addDays(today, 30);
+    picked = opts.usePicker ? firstValid() : null;
+    root.innerHTML =
+      '<div class="caption">' + opts.caption + '</div>' +
+      '<div class="stage">' +
+        '<h2>Booking</h2>' +
+        '<span class="fieldLabel" id="' + root.id + 'Label">Pick a delivery date</span>' +
+        '<div class="fieldArea" data-part="fieldArea"></div>' +
+        '<button type="button" class="primary" data-part="confirmButton">Confirm</button>' +
+        '<p class="msg" data-part="message"></p>' +
+      '</div>' +
+      '<button type="button" class="restart" data-part="restart">Restart demo</button>';
+    var area = root.querySelector('[data-part="fieldArea"]');
+    if (opts.usePicker) buildCalendar(area); else buildTextField(area);
+    root.querySelector('[data-part="confirmButton"]').addEventListener('click', handleConfirm);
+    root.querySelector('[data-part="restart"]').addEventListener('click', render);
+  }
+
+  function buildTextField(area) {
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'textField';
+    input.placeholder = 'DD/MM/YYYY';
+    input.autocomplete = 'off';
+    input.setAttribute('data-part', 'dateInput');
+    input.setAttribute('aria-labelledby', root.id + 'Label');
+    input.addEventListener('input', clearMessage);
+    area.appendChild(input);
+  }
+
+  function monthWord(d) { return d.toLocaleString('en-GB', { month: 'long' }); }
+  function monthShort(d) { return d.toLocaleString('en-GB', { month: 'short' }); }
+
+  function buildCalendar(area) {
+    var cal = document.createElement('div');
+    cal.className = 'calendar';
+    cal.setAttribute('data-part', 'dateInput');
+    var title = monthWord(today) + (today.getFullYear() !== lastDay.getFullYear() ? ' ' + today.getFullYear() : '');
+    if (today.getMonth() !== lastDay.getMonth() || today.getFullYear() !== lastDay.getFullYear()) {
+      title += ' – ' + monthWord(lastDay) + ' ' + lastDay.getFullYear();
+    } else {
+      title += ' ' + today.getFullYear();
+    }
+    var head = document.createElement('div');
+    head.className = 'monthName';
+    head.textContent = title;
+    cal.appendChild(head);
+    var grid = document.createElement('div');
+    grid.className = 'grid';
+    ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(function (n) {
+      var c = document.createElement('div');
+      c.className = 'dayName';
+      c.textContent = n;
+      grid.appendChild(c);
+    });
+    var start = addDays(today, -((today.getDay() + 6) % 7));
+    var end = addDays(lastDay, 6 - ((lastDay.getDay() + 6) % 7));
+    for (var d = start; d <= end; d = addDays(d, 1)) {
+      grid.appendChild(makeCell(d));
+    }
+    cal.appendChild(grid);
+    area.appendChild(cal);
+  }
+
+  function makeCell(d) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'day';
+    b.setAttribute('data-part', 'dayCell');
+    b.setAttribute('data-date', fmt(d));
+    b.setAttribute('aria-label', d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+    b.textContent = d.getDate() === 1 ? d.getDate() + ' ' + monthShort(d) : String(d.getDate());
+    if (!isValid(d)) {
+      b.disabled = true;
+    } else {
+      if (picked && d.getTime() === picked.getTime()) b.classList.add('picked');
+      b.addEventListener('click', function () { handlePick(d); });
+    }
+    return b;
+  }
+
+  function handlePick(d) {
+    picked = d;
+    root.querySelectorAll('[data-part="dayCell"]').forEach(function (c) {
+      c.classList.toggle('picked', c.getAttribute('data-date') === fmt(d));
+    });
+    clearMessage();
+  }
+
+  function clearMessage() {
+    var msg = root.querySelector('[data-part="message"]');
+    msg.textContent = '';
+    msg.className = 'msg';
+  }
+
+  function handleConfirm() {
+    var d = opts.usePicker ? picked : parseText(root.querySelector('[data-part="dateInput"]').value);
+    var text, ok = false;
+    if (!d) {
+      text = 'Enter the date as DD/MM/YYYY.';
+    } else if (isWeekend(d)) {
+      text = "We don't deliver on weekends. Please choose a weekday.";
+    } else if (d < today || d > lastDay) {
+      text = 'Please choose a date between ' + fmt(today) + ' and ' + fmt(lastDay) + '.';
+    } else {
+      text = 'Delivery date confirmed';
+      ok = true;
+    }
+    var msg = root.querySelector('[data-part="message"]');
+    msg.textContent = text;
+    msg.className = ok ? 'msg ok' : 'msg';
+  }
+
+  render();
+}
+
+createPanel(document.getElementById('panelA'), { caption: 'Version A', usePicker: false });
+createPanel(document.getElementById('panelB'), { caption: 'Version B', usePicker: true });
+</script>
+</body>
+</html>

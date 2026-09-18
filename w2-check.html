@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2933;background:#eef1f4}
+[hidden]{display:none !important}
+button{font:inherit}
+.pair{display:flex;min-height:100vh}
+.column{flex:1 1 0;min-width:0;padding:32px}
+.rule{flex:0 0 1px;background:#b8c1cc}
+.stage{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:24px;position:relative}
+.primary{background:#2f5fd0;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:18px;cursor:pointer}
+.primary:disabled{background:#c5ccd4;color:#7d8791;cursor:not-allowed}
+h2{margin:0 0 16px;font-size:24px}
+input{display:block;width:100%;margin-top:4px;font:inherit;padding:9px 12px;border:2px solid #9aa5b1;border-radius:8px;background:#fff;color:inherit}
+input.flagged{border-color:#c62828}
+label{display:block;margin-bottom:14px}
+.msg{margin:14px 0 0;color:#c62828}
+.msg.ok{color:#2e7d32}
+
+</style>
+</head>
+<body>
+<div class="pair">
+  <section class="column" id="panelA"></section>
+  <div class="rule"></div>
+  <section class="column" id="panelB"></section>
+</div>
+<script>
+// build one panel; opts.detailed decides how specific the message is
+function createPanel(root, opts) {
+  root.innerHTML =
+    '<div class="stage">' +
+      '<h2>Create account</h2>' +
+      '<label>Password<input type="password" data-part="passwordInput" autocomplete="off"></label>' +
+      '<button type="button" class="primary" data-part="submitButton">Create account</button>' +
+      '<p class="msg" data-part="message" hidden></p>' +
+    '</div>';
+
+  function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
+  function describe(value) {
+    var digits = (value.match(/\d/g) || []).length;
+    var weak = value.length < 8 || digits === 0;
+    if (!weak) return 'Yours has 5 characters and no numbers.';
+    return 'Yours has ' + plural(value.length, 'character') + ' and ' + (digits === 0 ? 'no numbers' : plural(digits, 'number')) + '.';
+  }
+
+  function handleSubmit() {
+    var input = root.querySelector('[data-part="passwordInput"]');
+    input.classList.add('flagged');
+    var msg = root.querySelector('[data-part="message"]');
+    msg.textContent = opts.detailed
+      ? 'Password needs at least 8 characters and one number. ' + describe(input.value)
+      : 'Invalid password.';
+    msg.hidden = false;
+  }
+
+  root.querySelector('[data-part="submitButton"]').addEventListener('click', handleSubmit);
+}
+
+createPanel(document.getElementById('panelA'), { detailed: false });
+createPanel(document.getElementById('panelB'), { detailed: true });
+</script>
+</body>
+</html>

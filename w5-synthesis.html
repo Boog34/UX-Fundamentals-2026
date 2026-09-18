@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2933;background:#eef1f4}
+[hidden]{display:none !important}
+button{font:inherit}
+.app{max-width:640px;margin:0 auto;padding:40px 16px 80px}
+.card{background:#fff;border:1px solid #d5dbe1;border-radius:12px;padding:28px}
+h1{margin:0 0 6px;font-size:26px}
+h2{margin:0 0 14px;font-size:22px}
+.classLine{margin:0 0 20px;color:#4a5560}
+.line{margin:0 0 14px}
+.primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:170px;height:48px;background:#2f5fd0;color:#fff;border:0;border-radius:8px;padding:0 22px;font-size:18px;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:default}
+.secondary{flex:0 0 auto;background:#fff;color:#7a1b1b;border:1px solid #c62828;border-radius:8px;padding:8px 16px;font-size:18px;cursor:pointer}
+.spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+label{display:block;margin-bottom:14px}
+input[type=text]{display:block;width:100%;margin-top:4px;font:inherit;padding:9px 12px;border:1px solid #9aa5b1;border-radius:8px;background:#fff;color:inherit}
+.msg{margin:12px 0 0;min-height:27px;color:#c62828}
+.note{margin:0 0 18px;color:#5b6773}
+.bannerRow{display:flex;align-items:center;gap:14px;margin:0 0 16px}
+.banner{flex:1 1 auto;background:#fdeaea;border:1px solid #c62828;color:#8e1b1b;border-radius:8px;padding:10px 14px}
+.overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,28,36,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.dialog{width:100%;max-width:420px;background:#fff;border-radius:12px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.restartLink{position:fixed;right:16px;bottom:12px;z-index:20;background:none;border:0;padding:4px 0;font-size:18px;color:#3a5a8c;text-decoration:underline;cursor:pointer}
+.dimmed .restartLink{color:#e4ebf7}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="card" id="card"></div>
+</main>
+<div class="overlay" id="overlay" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogHeading">
+    <h2 id="dialogHeading">Guest details</h2>
+    <label>Name<input type="text" id="guestName" autocomplete="off"></label>
+    <p class="note">Guests must be 16+</p>
+    <button type="button" class="primary" id="guestAdd" disabled>Add guest</button>
+  </div>
+</div>
+<button type="button" class="restartLink" id="restart">Restart demo</button>
+<script>
+var card = document.getElementById('card');
+var overlay = document.getElementById('overlay');
+var guestName = document.getElementById('guestName');
+var guestAdd = document.getElementById('guestAdd');
+var timers = [];
+var guest = '';
+var retried = false;
+
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+function q(part) { return card.querySelector('[data-part="' + part + '"]'); }
+
+function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fmt(d) { return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+
+function parseText(text) {
+  var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(text);
+  if (!m) return null;
+  var day = Number(m[1]), month = Number(m[2]), year = Number(m[3]);
+  var d = new Date(2000, 0, 1);
+  d.setFullYear(year, month - 1, day);
+  d.setHours(0, 0, 0, 0);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  return d;
+}
+
+function frame(inner) {
+  card.innerHTML = '<h1>Your class booking</h1>' + inner;
+}
+
+function showStart() {
+  frame(
+    '<p class="classLine">Tuesday 6:30pm &mdash; Strength Fundamentals</p>' +
+    '<button type="button" class="primary" data-part="cancelButton">Cancel booking</button>'
+  );
+  q('cancelButton').addEventListener('click', handleCancel);
+}
+
+function handleCancel() {
+  var b = q('cancelButton');
+  b.disabled = true;
+  b.innerHTML = '<span class="spinner" role="img" aria-label="Working"></span>';
+  later(showCancelled, 800);
+}
+
+function showCancelled() {
+  frame(
+    '<p class="line">Booking cancelled</p>' +
+    '<button type="button" class="primary" data-part="findButton">Find a replacement class</button>'
+  );
+  q('findButton').addEventListener('click', showDate);
+}
+
+function showDate() {
+  frame(
+    '<label>Pick a replacement date<input type="text" data-part="dateInput" placeholder="DD/MM/YYYY" autocomplete="off"></label>' +
+    '<button type="button" class="primary" data-part="confirmButton">Confirm</button>' +
+    '<p class="msg" data-part="message"></p>'
+  );
+  q('confirmButton').addEventListener('click', handleConfirm);
+}
+
+function handleConfirm() {
+  var today = dayStart(new Date());
+  var lastDay = addDays(today, 14);
+  var d = parseText(q('dateInput').value);
+  var text = '';
+  if (!d) {
+    text = 'Enter the date as DD/MM/YYYY.';
+  } else if (d.getDay() === 0 || d.getDay() === 6) {
+    text = "We don't run classes on weekends. Please choose a weekday.";
+  } else if (d < today || d > lastDay) {
+    text = 'Please choose a date between ' + fmt(today) + ' and ' + fmt(lastDay) + '.';
+  }
+  if (text) { q('message').textContent = text; return; }
+  showGuestPrompt();
+}
+
+function showGuestPrompt() {
+  frame('<button type="button" class="primary" data-part="guestButton">Add a guest to this class?</button>');
+  q('guestButton').addEventListener('click', openDialog);
+}
+
+function openDialog() {
+  guestName.value = '';
+  guestAdd.disabled = true;
+  overlay.hidden = false;
+  document.body.classList.add('dimmed');
+  guestName.focus();
+}
+
+guestName.addEventListener('input', function () {
+  guestAdd.disabled = guestName.value.trim() === '';
+});
+
+guestAdd.addEventListener('click', function () {
+  guest = guestName.value.trim();
+  overlay.hidden = true;
+  document.body.classList.remove('dimmed');
+  showPayment();
+});
+
+function showPayment() {
+  retried = false;
+  frame(
+    '<p class="line" data-part="guestLine"></p>' +
+    '<label>Card number<input type="text" data-part="cardInput" value="&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 4242" autocomplete="off"></label>' +
+    '<div class="bannerRow" data-part="bannerRow" hidden>' +
+      '<div class="banner">Your card was declined. Double-check the card number, or try a different card.</div>' +
+      '<button type="button" class="secondary" data-part="switchButton">Try a different card</button>' +
+    '</div>' +
+    '<button type="button" class="primary" data-part="payButton">Pay &euro;12</button>'
+  );
+  q('guestLine').textContent = 'Guest added: ' + guest;
+  q('payButton').addEventListener('click', handlePay);
+  q('switchButton').addEventListener('click', handleSwitch);
+}
+
+function handlePay() {
+  var b = q('payButton');
+  if (!retried) {
+    q('bannerRow').hidden = false;
+    b.disabled = true;
+    return;
+  }
+  b.disabled = true;
+  b.innerHTML = '<span class="spinner" role="img" aria-label="Working"></span>';
+  later(showDone, 800);
+}
+
+function handleSwitch() {
+  retried = true;
+  q('bannerRow').hidden = true;
+  q('cardInput').value = '•••• •••• •••• 1881';
+  q('payButton').disabled = false;
+}
+
+function showDone() {
+  frame('<p class="line">Payment complete &mdash; you\'re booked in with a guest</p>');
+}
+
+function restart() {
+  clearTimers();
+  overlay.hidden = true;
+  document.body.classList.remove('dimmed');
+  guest = '';
+  retried = false;
+  showStart();
+}
+
+document.getElementById('restart').addEventListener('click', restart);
+showStart();
+</script>
+</body>
+</html>

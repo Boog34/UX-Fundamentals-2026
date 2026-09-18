@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2933;background:#eef1f4}
+[hidden]{display:none !important}
+button{font:inherit}
+.pair{display:flex;min-height:100vh}
+.column{flex:1 1 0;min-width:0;padding:20px 32px;display:flex;flex-direction:column}
+.rule{flex:0 0 1px;background:#b8c1cc}
+.caption{font-size:18px;color:#5b6773;margin:0 0 12px}
+.stage{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:24px;position:relative}
+.restart{align-self:flex-start;margin-top:14px;background:none;border:0;padding:4px 0;font-size:18px;color:#3a5a8c;text-decoration:underline;cursor:pointer}
+h2{margin:0 0 16px;font-size:24px}
+.row{display:flex;align-items:center;gap:14px;min-height:44px}
+.note{margin:8px 0 0;color:#4a5560}
+/* switch */
+.toggle{position:relative;flex:0 0 auto;width:68px;height:38px;padding:0;border:0;border-radius:19px;background:#b9c0c8;cursor:pointer;transition:background-color .25s ease}
+.knob{position:absolute;top:5px;left:5px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .25s ease}
+.toggle[aria-checked="true"] .knob{transform:translateX(30px)}
+.tinted .toggle[aria-checked="true"]{background:#2e9e5b}
+</style>
+</head>
+<body>
+<div class="pair">
+  <section class="column" id="panelA"></section>
+  <div class="rule"></div>
+  <section class="column" id="panelB"></section>
+</div>
+<script>
+// build one panel; opts.tintTrack and opts.showLabel are the only differences
+function createPanel(root, opts) {
+  var isOn = false;
+
+  function render() {
+    isOn = false;
+    root.innerHTML =
+      '<div class="caption">' + opts.caption + '</div>' +
+      '<div class="stage' + (opts.tintTrack ? ' tinted' : '') + '">' +
+        '<h2>Settings</h2>' +
+        '<div class="row">' +
+          '<button type="button" class="toggle" role="switch" aria-checked="false" aria-label="Notifications" data-part="toggle"><span class="knob" data-part="knob"></span></button>' +
+          '<span data-part="toggleLabel"></span>' +
+        '</div>' +
+        '<p class="note">Get a message when a class is updated.</p>' +
+      '</div>' +
+      '<button type="button" class="restart" data-part="restart">Restart demo</button>';
+    root.querySelector('[data-part="toggle"]').addEventListener('click', handleClick);
+    root.querySelector('[data-part="restart"]').addEventListener('click', render);
+    showLabel();
+  }
+
+  function showLabel() {
+    if (!opts.showLabel) return;
+    root.querySelector('[data-part="toggleLabel"]').textContent = 'Notifications: ' + (isOn ? 'On' : 'Off');
+  }
+
+  function handleClick() {
+    isOn = !isOn;
+    root.querySelector('[data-part="toggle"]').setAttribute('aria-checked', String(isOn));
+    showLabel();
+  }
+
+  render();
+}
+
+createPanel(document.getElementById('panelA'), { caption: 'Version A', tintTrack: false, showLabel: false });
+createPanel(document.getElementById('panelB'), { caption: 'Version B', tintTrack: true, showLabel: true });
+</script>
+</body>
+</html>

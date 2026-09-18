@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1f2933;background:#eef1f4}
+[hidden]{display:none !important}
+button{font:inherit}
+.pair{display:flex;min-height:100vh}
+.column{flex:1 1 0;min-width:0;padding:32px}
+.rule{flex:0 0 1px;background:#b8c1cc}
+.stage{background:#fff;border:1px solid #d5dbe1;border-radius:10px;padding:24px;position:relative}
+.primary{background:#2f5fd0;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:18px;cursor:pointer}
+.primary:disabled{background:#c5ccd4;color:#7d8791;cursor:not-allowed}
+h2{margin:0 0 16px;font-size:24px}
+input{display:block;width:100%;margin-top:4px;font:inherit;padding:9px 12px;border:2px solid #9aa5b1;border-radius:8px;background:#fff;color:inherit}
+input.flagged{border-color:#c62828}
+label{display:block;margin-bottom:14px}
+.msg{margin:14px 0 0;color:#c62828}
+.msg.ok{color:#2e7d32}
+
+.pending{margin:14px 0 0;color:#4a5560;min-height:27px}
+.track{height:16px;background:#dfe4e9;border-radius:8px;overflow:hidden;margin-top:14px}
+.fill{height:100%;width:0;background:#2f5fd0}
+.progressRow{display:flex;align-items:center;gap:14px}
+.progressRow .track{flex:1 1 auto;margin-top:0}
+.uploadDone{color:#2e7d32;font-weight:600}
+</style>
+</head>
+<body>
+<div class="pair">
+  <section class="column" id="panelA"></section>
+  <div class="rule"></div>
+  <section class="column" id="panelB"></section>
+</div>
+<script>
+// build one panel; opts.showProgress decides whether the upload is shown while it runs
+function createPanel(root, opts) {
+  var busy = false;
+  var frameId = 0;
+
+  function render() {
+    root.innerHTML =
+      '<div class="stage">' +
+        '<button type="button" class="primary" data-part="chooseButton">Choose file</button>' +
+        '<div class="pending" data-part="result"></div>' +
+      '</div>';
+    root.querySelector('[data-part="chooseButton"]').addEventListener('click', handleChoose);
+  }
+
+  function handleChoose() {
+    if (busy) return;
+    busy = true;
+    var result = root.querySelector('[data-part="result"]');
+    result.innerHTML = '';
+    var started = performance.now();
+    if (!opts.showProgress) {
+      setTimeout(function () {
+        result.textContent = 'Done';
+        busy = false;
+      }, 3000);
+      return;
+    }
+    result.innerHTML =
+      '<div class="progressRow"><div class="track"><div class="fill" data-part="fill"></div></div><span data-part="percent">0%</span></div>';
+    var fill = result.querySelector('[data-part="fill"]');
+    var percent = result.querySelector('[data-part="percent"]');
+    function tick(now) {
+      var p = Math.min(1, (now - started) / 3000);
+      fill.style.width = (p * 100) + '%';
+      percent.textContent = Math.round(p * 100) + '%';
+      if (p < 1) {
+        frameId = requestAnimationFrame(tick);
+      } else {
+        result.innerHTML = '<span class="uploadDone">&#10003; Upload complete</span>';
+        busy = false;
+      }
+    }
+    frameId = requestAnimationFrame(tick);
+  }
+
+  render();
+}
+
+createPanel(document.getElementById('panelA'), { showProgress: false });
+createPanel(document.getElementById('panelB'), { showProgress: true });
+</script>
+</body>
+</html>
