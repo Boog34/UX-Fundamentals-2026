@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a delivery</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --danger: #c62828;
+    --ok: #15803d;
+    --off: #b3bac4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .stage {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .rule { background: var(--border); align-self: stretch; }
+  .caption {
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .card h2 { margin: 0 0 20px; font-size: 24px; }
+  label, .label { display: block; margin-bottom: 6px; font-weight: 600; }
+  .input {
+    width: 100%;
+    min-height: 46px;
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+  }
+  input.input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .input.placeholder { color: #8a929e; }
+
+  /* Calendar */
+  .cal { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cal-head .title { font-weight: 700; }
+  .nav {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .nav:hover:not(:disabled) { background: #f3f4f6; }
+  .nav:disabled { color: var(--off); cursor: not-allowed; background: #f6f7f9; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .dow { text-align: center; color: var(--muted); font-weight: 600; padding: 4px 0; }
+  .day {
+    height: 44px;
+    border: 0;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .day:hover:not(:disabled) { background: #e8efff; }
+  .day:disabled {
+    color: var(--off);
+    background: #f6f7f9;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    text-decoration-color: #d4d9e0;
+  }
+  .day.selected, .day.selected:hover { background: var(--accent); color: #fff; font-weight: 700; }
+  .day:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .actions { margin-top: 20px; }
+  button.primary {
+    font: inherit;
+    font-weight: 600;
+    height: 52px;
+    min-width: 140px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  .message { margin: 16px 0 0; min-height: 26px; }
+  .message.error { color: var(--danger); }
+  .message.ok { color: var(--ok); font-weight: 600; }
+  .hint { margin: 8px 0 0; color: var(--muted); }
+
+  @media (max-width: 800px) {
+    .stage { grid-template-columns: 1fr; }
+    .rule { width: 100%; height: 1px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <section>
+    <p class="caption">Version A</p>
+    <form class="card" id="form-a" novalidate autocomplete="off">
+      <h2>Book a delivery</h2>
+      <label for="a-date">Pick a delivery date</label>
+      <input class="input" type="text" id="a-date" placeholder="DD/MM/YYYY">
+      <div class="actions">
+        <button type="submit" class="primary">Confirm</button>
+      </div>
+      <p class="message" id="msg-a" role="status"></p>
+    </form>
+  </section>
+
+  <div class="rule" aria-hidden="true"></div>
+
+  <section>
+    <p class="caption">Version B</p>
+    <form class="card" id="form-b" novalidate autocomplete="off">
+      <h2>Book a delivery</h2>
+      <span class="label" id="b-label">Pick a delivery date</span>
+      <div class="input placeholder" id="b-shown" aria-labelledby="b-label">Select a date</div>
+      <div class="cal" id="cal">
+        <div class="cal-head">
+          <button type="button" class="nav" id="prev" aria-label="Previous month">&lsaquo;</button>
+          <span class="title" id="cal-title"></span>
+          <button type="button" class="nav" id="next" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">Confirm</button>
+      </div>
+      <p class="message" id="msg-b" role="status"></p>
+    </form>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var DAY_MS = 86400000;
+  var today = new Date();
+  today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  var last = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+
+  function isWeekend(d) { var n = d.getDay(); return n === 0 || n === 6; }
+  function inRange(d) { return d >= today && d <= last; }
+  function pretty(d) {
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  var inputA = document.getElementById('a-date');
+  var msgA = document.getElementById('msg-a');
+
+  function parseDate(text) {
+    var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(text);
+    if (!m) return null;
+    var day = +m[1], month = +m[2], year = +m[3];
+    var d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  document.getElementById('form-a').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = parseDate(inputA.value);
+    msgA.className = 'message error';
+    if (!d) {
+      msgA.textContent = 'That doesn’t look like a date. Please use DD/MM/YYYY.';
+    } else if (!inRange(d)) {
+      msgA.textContent = 'Delivery dates run from today to ' + pretty(last) + '.';
+    } else if (isWeekend(d)) {
+      msgA.textContent = 'We don’t deliver on weekends.';
+    } else {
+      msgA.className = 'message ok';
+      msgA.textContent = 'Delivery booked for ' + pretty(d) + '.';
+    }
+  });
+
+  var view = new Date(today.getFullYear(), today.getMonth(), 1);
+  var selected = null;
+  var grid = document.getElementById('grid');
+  var title = document.getElementById('cal-title');
+  var prev = document.getElementById('prev');
+  var next = document.getElementById('next');
+  var shown = document.getElementById('b-shown');
+  var msgB = document.getElementById('msg-b');
+  var firstView = new Date(today.getFullYear(), today.getMonth(), 1);
+  var lastView = new Date(last.getFullYear(), last.getMonth(), 1);
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+
+  function renderCal() {
+    grid.innerHTML = '';
+    title.textContent = view.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    prev.disabled = view <= firstView;
+    next.disabled = view >= lastView;
+
+    ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(function (n) {
+      grid.appendChild(el('div', 'dow', n));
+    });
+
+    var offset = (view.getDay() + 6) % 7;
+    for (var i = 0; i < offset; i++) grid.appendChild(el('div'));
+
+    var count = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    for (var day = 1; day <= count; day++) {
+      (function (d) {
+        var date = new Date(view.getFullYear(), view.getMonth(), d);
+        var btn = el('button', 'day', String(d));
+        btn.type = 'button';
+        btn.setAttribute('aria-label', pretty(date));
+        if (!inRange(date) || isWeekend(date)) {
+          btn.disabled = true;
+        } else {
+          if (selected && selected.getTime() === date.getTime()) btn.classList.add('selected');
+          btn.addEventListener('click', function () {
+            selected = date;
+            shown.textContent = pretty(date);
+            shown.classList.remove('placeholder');
+            msgB.textContent = '';
+            renderCal();
+          });
+        }
+        grid.appendChild(btn);
+      })(day);
+    }
+  }
+
+  prev.addEventListener('click', function () {
+    view = new Date(view.getFullYear(), view.getMonth() - 1, 1);
+    renderCal();
+  });
+  next.addEventListener('click', function () {
+    view = new Date(view.getFullYear(), view.getMonth() + 1, 1);
+    renderCal();
+  });
+
+  document.getElementById('form-b').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!selected) {
+      msgB.className = 'message error';
+      msgB.textContent = 'Please pick a date.';
+    } else {
+      msgB.className = 'message ok';
+      msgB.textContent = 'Delivery booked for ' + pretty(selected) + '.';
+    }
+  });
+
+  renderCal();
+})();
+</script>
+</body>
+</html>

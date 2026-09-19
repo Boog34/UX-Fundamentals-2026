@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your class booking</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --danger: #c62828;
+    --danger-bg: #fdecea;
+    --ok: #15803d;
+    --ok-bg: #e8f5ec;
+    --backdrop: rgba(31, 41, 51, 0.55);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 48px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .page { max-width: 600px; margin: 0 auto; }
+  .page > h1 { margin: 0 0 20px; font-size: 28px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .card h2 { margin: 0 0 6px; font-size: 24px; }
+  .card p { margin: 0 0 16px; }
+  .card p.muted { color: var(--muted); }
+  .class-name { font-size: 22px; font-weight: 700; }
+  .actions { margin-top: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  label { display: block; margin-bottom: 6px; font-weight: 600; }
+  input {
+    width: 100%;
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  button { font: inherit; cursor: pointer; }
+  button.primary {
+    font-weight: 600;
+    height: 52px;
+    min-width: 180px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  button.primary:hover:not(:disabled) { background: var(--accent-dark); }
+  button.primary:disabled { cursor: default; opacity: 0.8; }
+  button.secondary {
+    font-weight: 600;
+    height: 44px;
+    padding: 0 16px;
+    border: 2px solid var(--danger);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--danger);
+  }
+  button.secondary:hover { background: var(--danger-bg); }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .message { margin: 12px 0 0; color: var(--danger); min-height: 26px; }
+  .banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    border: 1px solid var(--danger);
+    border-left-width: 6px;
+    border-radius: 8px;
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+  .banner span { flex: 1 1 240px; }
+  .success {
+    padding: 16px;
+    border: 1px solid var(--ok);
+    border-left-width: 6px;
+    border-radius: 8px;
+    background: var(--ok-bg);
+    color: var(--ok);
+    font-weight: 600;
+  }
+  .details { margin: 0 0 8px; }
+  .details div { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .details dt { width: 90px; color: var(--muted); flex: none; }
+  .details dd { margin: 0; font-weight: 600; }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--backdrop);
+    z-index: 10;
+  }
+  .modal {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+  .modal h2 { margin: 0 0 16px; font-size: 24px; }
+  .modal .body { min-height: 100px; }
+  .modal .actions { justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Your class booking</h1>
+  <div id="view"></div>
+</div>
+<div id="modal-root"></div>
+
+<script>
+(function () {
+  var view = document.getElementById('view');
+  var modalRoot = document.getElementById('modal-root');
+
+  var today = new Date();
+  today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  var lastDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+
+  var state = {
+    classDate: null,
+    guestName: '',
+    payAttempts: 0,
+    cardNumber: '•••• •••• •••• 4242'
+  };
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+  function button(label, cls, onClick) {
+    var b = el('button', cls, label);
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function pretty(d) {
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function setView(node) {
+    view.innerHTML = '';
+    view.appendChild(node);
+  }
+
+  // ---------- Start ----------
+  function showStart() {
+    var card = el('div', 'card');
+    card.appendChild(el('h2', null, 'Upcoming class'));
+    card.appendChild(el('p', 'class-name', 'Tuesday 6:30pm — Strength Fundamentals'));
+    card.appendChild(el('p', 'muted', 'Fitness studio, Studio 2'));
+    var actions = el('div', 'actions');
+    var cancel = button('Cancel booking', 'primary', function () {
+      cancel.disabled = true;
+      cancel.innerHTML = '';
+      cancel.appendChild(el('span', 'spinner'));
+      setTimeout(showCancelled, 800);
+    });
+    actions.appendChild(cancel);
+    card.appendChild(actions);
+    setView(card);
+  }
+
+  // ---------- Cancelled ----------
+  function showCancelled() {
+    var card = el('div', 'card');
+    card.appendChild(el('h2', null, 'Booking cancelled'));
+    card.appendChild(el('p', 'muted', 'Your place in Tuesday 6:30pm — Strength Fundamentals has been released.'));
+    var actions = el('div', 'actions');
+    actions.appendChild(button('Find a replacement class', 'primary', showDatePicker));
+    card.appendChild(actions);
+    setView(card);
+  }
+
+  // ---------- Replacement date ----------
+  function parseDate(text) {
+    var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(text);
+    if (!m) return null;
+    var day = +m[1], month = +m[2], year = +m[3];
+    var d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function showDatePicker() {
+    var card = el('div', 'card');
+    card.appendChild(el('h2', null, 'Choose a date'));
+    card.appendChild(el('p', 'muted', 'Pick a day for your replacement Strength Fundamentals class.'));
+    var lbl = el('label', null, 'Class date');
+    lbl.setAttribute('for', 'date');
+    var input = el('input');
+    input.type = 'text';
+    input.id = 'date';
+    input.placeholder = 'DD/MM/YYYY';
+    input.autocomplete = 'off';
+    var msg = el('p', 'message');
+    msg.setAttribute('role', 'status');
+    var actions = el('div', 'actions');
+    actions.appendChild(button('Confirm', 'primary', function () {
+      var d = parseDate(input.value);
+      if (!d) {
+        msg.textContent = 'That doesn’t look like a date. Please use DD/MM/YYYY.';
+      } else if (d < today || d > lastDay) {
+        msg.textContent = 'Classes can be booked from today up to ' + pretty(lastDay) + '.';
+      } else if (d.getDay() === 0 || d.getDay() === 6) {
+        msg.textContent = 'We don’t run classes at weekends.';
+      } else {
+        state.classDate = d;
+        showDateConfirmed();
+      }
+    }));
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); actions.firstChild.click(); }
+    });
+    card.appendChild(lbl);
+    card.appendChild(input);
+    card.appendChild(msg);
+    card.appendChild(actions);
+    setView(card);
+    input.focus();
+  }
+
+  // ---------- Date confirmed, offer guest ----------
+  function showDateConfirmed() {
+    var card = el('div', 'card');
+    card.appendChild(el('h2', null, 'Replacement class booked'));
+    card.appendChild(el('p', 'class-name', pretty(state.classDate) + ', 6:30pm'));
+    card.appendChild(el('p', 'muted', 'Strength Fundamentals'));
+    var actions = el('div', 'actions');
+    actions.appendChild(button('Add a guest to this class?', 'primary', showWizard));
+    card.appendChild(actions);
+    setView(card);
+  }
+
+  // ---------- Guest wizard ----------
+  function showWizard() {
+    var step = 0;
+    var overlay = el('div', 'overlay');
+    var modal = el('div', 'modal');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    overlay.appendChild(modal);
+    modalRoot.innerHTML = '';
+    modalRoot.appendChild(overlay);
+
+    function draw() {
+      modal.innerHTML = '';
+      var body = el('div', 'body');
+      var actions = el('div', 'actions');
+      var focusTarget = null;
+
+      if (step === 0) {
+        modal.appendChild(el('h2', null, 'Guest details'));
+        var lbl = el('label', null, 'Guest’s name');
+        lbl.setAttribute('for', 'guest-name');
+        var input = el('input');
+        input.type = 'text';
+        input.id = 'guest-name';
+        input.autocomplete = 'off';
+        input.value = state.guestName;
+        input.addEventListener('input', function () { state.guestName = input.value; });
+        body.appendChild(lbl);
+        body.appendChild(input);
+        focusTarget = input;
+      } else if (step === 1) {
+        modal.appendChild(el('h2', null, 'Before you continue'));
+        body.appendChild(el('p', null, 'Guests must be 16+'));
+      } else {
+        modal.appendChild(el('h2', null, 'Your guest'));
+        var dl = el('dl', 'details');
+        [
+          ['Guest', state.guestName.trim() || 'Name not entered'],
+          ['Class', 'Strength Fundamentals'],
+          ['When', pretty(state.classDate) + ', 6:30pm']
+        ].forEach(function (r) {
+          var row = el('div');
+          row.appendChild(el('dt', null, r[0]));
+          row.appendChild(el('dd', null, r[1]));
+          dl.appendChild(row);
+        });
+        body.appendChild(dl);
+      }
+
+      var label = step === 2 ? 'Continue to payment' : 'Next';
+      actions.appendChild(button(label, 'primary', function () {
+        if (step < 2) {
+          step += 1;
+          draw();
+        } else {
+          modalRoot.innerHTML = '';
+          showPayment();
+        }
+      }));
+      modal.appendChild(body);
+      modal.appendChild(actions);
+      if (focusTarget) focusTarget.focus();
+    }
+    draw();
+  }
+
+  // ---------- Payment ----------
+  function showPayment() {
+    var card = el('div', 'card');
+    card.appendChild(el('h2', null, 'Pay for your guest’s spot'));
+    card.appendChild(el('p', 'muted', (state.guestName.trim() || 'Your guest') + ' · ' + pretty(state.classDate) + ', 6:30pm'));
+
+    var lbl = el('label', null, 'Card number');
+    lbl.setAttribute('for', 'card');
+    var input = el('input');
+    input.type = 'text';
+    input.id = 'card';
+    input.autocomplete = 'off';
+    input.value = state.cardNumber;
+
+    var bannerSlot = el('div');
+    bannerSlot.setAttribute('role', 'alert');
+    var actions = el('div', 'actions');
+    var pay = button('Pay €12', 'primary', function () {
+      state.payAttempts += 1;
+      if (state.payAttempts === 1) {
+        pay.disabled = true;
+        var banner = el('div', 'banner');
+        banner.appendChild(el('span', null, 'Your card was declined. Double-check the card number, or try a different card.'));
+        banner.appendChild(button('Try a different card', 'secondary', function () {
+          bannerSlot.innerHTML = '';
+          input.value = '•••• •••• •••• 1881';
+          pay.disabled = false;
+          input.focus();
+        }));
+        bannerSlot.appendChild(banner);
+      } else {
+        pay.disabled = true;
+        pay.innerHTML = '';
+        pay.appendChild(el('span', 'spinner'));
+        setTimeout(showDone, 800);
+      }
+    });
+    actions.appendChild(pay);
+
+    input.addEventListener('input', function () {
+      if (state.payAttempts === 1) { pay.disabled = false; }
+    });
+
+    card.appendChild(lbl);
+    card.appendChild(input);
+    card.appendChild(bannerSlot);
+    card.appendChild(actions);
+    setView(card);
+  }
+
+  // ---------- Done ----------
+  function showDone() {
+    var card = el('div', 'card');
+    var ok = el('div', 'success', 'Payment complete — you’re booked in with a guest');
+    card.appendChild(ok);
+    var when = el('p', 'muted', pretty(state.classDate) + ', 6:30pm — Strength Fundamentals');
+    when.style.margin = '16px 0 0';
+    card.appendChild(when);
+    setView(card);
+  }
+
+  showStart();
+})();
+</script>
+</body>
+</html>

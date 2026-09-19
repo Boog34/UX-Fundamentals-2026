@@ -1,264 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Upload a document</title>
+<title>Upload a file</title>
 <style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1d2330;
+    --muted: #667085;
+    --line: #dfe3ea;
+    --accent: #2f5bea;
+    --accent-dark: #2447c2;
+    --row-hover: #eef2ff;
+    --row-selected: #dbe4ff;
+  }
   * { box-sizing: border-box; }
-
+  html, body { height: 100%; margin: 0; }
   body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f4f5f7;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 18px;
-    color: #1f2328;
-  }
-
-  .card {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    padding: 40px;
-    width: 420px;
-    max-width: 90vw;
-  }
-
-  h1 {
-    font-size: 24px;
-    margin: 0 0 8px;
-  }
-
-  p.sub {
-    margin: 0 0 28px;
-    color: #5f6672;
-    font-size: 17px;
-    line-height: 1.4;
-  }
-
-  .upload-row {
+    color: var(--ink);
+    background: var(--bg);
     display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  button.choose {
-    font-size: 18px;
-    padding: 12px 22px;
-    border-radius: 8px;
-    border: none;
-    background: #2f6fed;
-    color: #fff;
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  button.choose:hover {
-    background: #2559c9;
-  }
-
-  .status-text {
-    font-size: 17px;
-    color: #3c8f4c;
-  }
-
-  /* Picker overlay */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(20, 22, 26, 0.45);
-    display: none;
     align-items: center;
     justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 36px 36px 32px;
+    box-shadow: 0 8px 28px rgba(20, 30, 60, 0.08);
+  }
+  h1 { font-size: 26px; margin: 0 0 8px; font-weight: 650; }
+  .card p { margin: 0 0 26px; color: var(--muted); line-height: 1.5; }
+  .row { display: flex; align-items: center; gap: 18px; min-height: 52px; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 9px;
+    padding: 11px 22px;
+    border: 1px solid transparent;
+  }
+  button:focus-visible, .file:focus-visible { outline: 3px solid rgba(47, 91, 234, 0.45); outline-offset: 2px; }
+  .primary { background: var(--accent); color: #fff; font-weight: 600; }
+  .primary:hover:not(:disabled) { background: var(--accent-dark); }
+  .primary:disabled { background: #b8c3ee; cursor: default; }
+  .secondary { background: #fff; color: var(--ink); border-color: #c8cfda; }
+  .secondary:hover { background: #f3f5f9; }
+
+  #done { color: #1f7a45; font-weight: 600; opacity: 0; }
+  #done.on { opacity: 1; }
+
+  /* file browser */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(18, 24, 40, 0.45);
+    display: flex; align-items: center; justify-content: center;
     padding: 20px;
   }
-
-  .overlay.open {
-    display: flex;
-  }
-
+  .scrim[hidden] { display: none; }
   .picker {
-    background: #ffffff;
-    border-radius: 10px;
-    width: 380px;
-    max-width: 100%;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    width: 100%; max-width: 680px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #c9d0dc;
+    box-shadow: 0 24px 60px rgba(10, 16, 34, 0.35);
+    display: flex; flex-direction: column;
     overflow: hidden;
   }
-
-  .picker-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #e6e8eb;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .file-list {
-    list-style: none;
-    margin: 0;
-    padding: 8px;
-    max-height: 260px;
-    overflow-y: auto;
-  }
-
-  .file-list li {
-    padding: 10px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 17px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .file-list li:hover {
-    background: #f0f3fb;
-  }
-
-  .file-list li.selected {
-    background: #e4ecfd;
-  }
-
-  .file-icon {
-    width: 18px;
-    height: 18px;
-    border-radius: 3px;
-    background: #c3cddc;
-    flex-shrink: 0;
-  }
-
-  .picker-footer {
+  .picker-head {
     padding: 14px 20px;
-    border-top: 1px solid #e6e8eb;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    background: #f1f3f7;
+    border-bottom: 1px solid var(--line);
+    font-weight: 650;
+    display: flex; align-items: center; justify-content: space-between;
   }
-
-  .picker-footer button {
-    font-size: 16px;
-    padding: 9px 16px;
-    border-radius: 7px;
-    border: 1px solid #d3d7dd;
-    background: #fff;
-    cursor: pointer;
+  .crumbs { color: var(--muted); font-weight: 500; font-size: 17px; }
+  .picker-body { display: flex; min-height: 300px; }
+  .side {
+    width: 170px; flex: none;
+    border-right: 1px solid var(--line);
+    background: #f8f9fb;
+    padding: 12px 8px;
   }
-
-  .picker-footer button:not(.primary):hover {
-    background: #f4f5f7;
+  .side div { padding: 8px 12px; border-radius: 7px; color: #475066; }
+  .side .cur { background: #e3e8f5; color: var(--ink); font-weight: 600; }
+  .list { flex: 1; min-width: 0; padding: 8px; overflow-y: auto; max-height: 340px; }
+  .cols {
+    display: grid; grid-template-columns: 1fr 96px 90px;
+    padding: 6px 12px; color: var(--muted); font-size: 16px;
+    border-bottom: 1px solid var(--line); margin-bottom: 4px;
   }
-
-  .picker-footer button.primary {
-    background: #2f6fed;
-    border-color: #2f6fed;
-    color: #fff;
+  .file {
+    display: grid; grid-template-columns: 1fr 96px 90px;
+    align-items: center;
+    padding: 9px 12px; border-radius: 8px; cursor: default;
+    user-select: none;
   }
+  .file:hover { background: var(--row-hover); }
+  .file[aria-selected="true"] { background: var(--row-selected); }
+  .name { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .name span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { color: var(--muted); font-size: 16px; }
+  .icon {
+    flex: none; width: 22px; height: 27px; border-radius: 3px;
+    position: relative; background: #fff; border: 2px solid #8a94a8;
+  }
+  .icon::after {
+    content: ""; position: absolute; right: -2px; top: -2px;
+    width: 8px; height: 8px; background: #dfe3ea; border-left: 2px solid #8a94a8; border-bottom: 2px solid #8a94a8;
+  }
+  .icon.img { border-color: #3aa76d; }
+  .icon.img::after { border-color: #3aa76d; }
+  .icon.doc { border-color: #2f5bea; }
+  .icon.doc::after { border-color: #2f5bea; }
+  .icon.sheet { border-color: #d98a1f; }
+  .icon.sheet::after { border-color: #d98a1f; }
+  .picker-foot {
+    padding: 14px 20px; border-top: 1px solid var(--line); background: #f8f9fb;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .picked { flex: 1; color: var(--muted); font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .picker-footer button.primary:disabled {
-    background: #b9cbf6;
-    border-color: #b9cbf6;
-    cursor: default;
+  @media (max-width: 560px) {
+    .side { display: none; }
+    .card { padding: 26px 22px; }
   }
 </style>
 </head>
 <body>
-
-  <div class="card">
-    <h1>Upload your document</h1>
-    <p class="sub">Attach a file to include with your submission.</p>
-    <div class="upload-row">
-      <button class="choose" id="chooseBtn" type="button">Choose file</button>
-      <span class="status-text" id="statusText"></span>
+  <main class="card">
+    <h1>Add to your trip folder</h1>
+    <p>Pick a file from your computer to add to the trip folder.</p>
+    <div class="row">
+      <button id="choose" class="primary" type="button" aria-haspopup="dialog">Choose file</button>
+      <span id="done">Done</span>
     </div>
-  </div>
+  </main>
 
-  <div class="overlay" id="overlay">
-    <div class="picker">
-      <div class="picker-header">Select a file</div>
-      <ul class="file-list" id="fileList">
-        <li data-name="Project_Notes.docx"><span class="file-icon"></span>Project_Notes.docx</li>
-        <li data-name="Cover_Letter.pdf"><span class="file-icon"></span>Cover_Letter.pdf</li>
-        <li data-name="Budget_Summary.xlsx"><span class="file-icon"></span>Budget_Summary.xlsx</li>
-        <li data-name="Site_Photo.png"><span class="file-icon"></span>Site_Photo.png</li>
-        <li data-name="Signed_Form.pdf"><span class="file-icon"></span>Signed_Form.pdf</li>
-      </ul>
-      <div class="picker-footer">
-        <button id="cancelBtn" type="button">Cancel</button>
-        <button id="openBtn" type="button" class="primary" disabled>Open</button>
+  <div id="scrim" class="scrim" hidden>
+    <div class="picker" role="dialog" aria-modal="true" aria-labelledby="picker-title">
+      <div class="picker-head">
+        <span id="picker-title">Choose a file</span>
+        <span class="crumbs">Documents / Trip</span>
+      </div>
+      <div class="picker-body">
+        <nav class="side" aria-label="Places">
+          <div>Recent</div>
+          <div>Desktop</div>
+          <div class="cur">Documents</div>
+          <div>Downloads</div>
+          <div>Pictures</div>
+        </nav>
+        <div class="list" role="listbox" aria-label="Files" id="list">
+          <div class="cols" aria-hidden="true"><span>Name</span><span>Modified</span><span>Size</span></div>
+        </div>
+      </div>
+      <div class="picker-foot">
+        <span class="picked" id="picked">No file selected</span>
+        <button id="cancel" class="secondary" type="button">Cancel</button>
+        <button id="open" class="primary" type="button" disabled>Open</button>
       </div>
     </div>
   </div>
 
 <script>
-  const chooseBtn = document.getElementById('chooseBtn');
-  const overlay = document.getElementById('overlay');
-  const fileList = document.getElementById('fileList');
-  const cancelBtn = document.getElementById('cancelBtn');
-  const openBtn = document.getElementById('openBtn');
-  const statusText = document.getElementById('statusText');
+(function () {
+  var files = [
+    { name: "Lisbon-rooftops.jpg",       kind: "img",   mod: "Mar 14", size: "3.2 MB" },
+    { name: "Harbour-sunrise.jpg",       kind: "img",   mod: "Mar 14", size: "4.1 MB" },
+    { name: "Trip-itinerary.docx",       kind: "doc",   mod: "Mar 09", size: "86 KB" },
+    { name: "Train-tickets.pdf",         kind: "doc",   mod: "Mar 02", size: "212 KB" },
+    { name: "Shared-costs.xlsx",         kind: "sheet", mod: "Feb 27", size: "48 KB" },
+    { name: "Market-street.png",         kind: "img",   mod: "Feb 21", size: "1.8 MB" },
+    { name: "Packing-list.txt",          kind: "doc",   mod: "Feb 11", size: "2 KB" }
+  ];
 
-  let selectedItem = null;
-  let uploadTimer = null;
+  var chooseBtn = document.getElementById("choose");
+  var scrim = document.getElementById("scrim");
+  var list = document.getElementById("list");
+  var openBtn = document.getElementById("open");
+  var cancelBtn = document.getElementById("cancel");
+  var picked = document.getElementById("picked");
+  var done = document.getElementById("done");
+
+  var selected = null;
+  var uploading = false;
+  var timer = null;
+
+  files.forEach(function (f) {
+    var row = document.createElement("div");
+    row.className = "file";
+    row.setAttribute("role", "option");
+    row.setAttribute("aria-selected", "false");
+    row.tabIndex = 0;
+    row.innerHTML =
+      '<span class="name"><span class="icon ' + f.kind + '"></span><span></span></span>' +
+      '<span class="meta"></span><span class="meta"></span>';
+    row.querySelector(".name span:last-child").textContent = f.name;
+    row.children[1].textContent = f.mod;
+    row.children[2].textContent = f.size;
+    row.addEventListener("click", function () { select(f, row); });
+    row.addEventListener("dblclick", function () { select(f, row); confirm(); });
+    row.addEventListener("keydown", function (e) {
+      if (e.key === " ") { e.preventDefault(); select(f, row); }
+      if (e.key === "ArrowDown" && row.nextElementSibling) { row.nextElementSibling.focus(); }
+      if (e.key === "ArrowUp" && row.previousElementSibling && row.previousElementSibling.classList.contains("file")) {
+        row.previousElementSibling.focus();
+      }
+    });
+    list.appendChild(row);
+  });
+
+  function select(f, row) {
+    selected = f;
+    Array.prototype.forEach.call(list.querySelectorAll(".file"), function (r) {
+      r.setAttribute("aria-selected", r === row ? "true" : "false");
+    });
+    picked.textContent = f.name;
+    openBtn.disabled = false;
+  }
 
   function openPicker() {
-    selectedItem = null;
+    if (uploading) return;
+    selected = null;
+    picked.textContent = "No file selected";
     openBtn.disabled = true;
-    Array.from(fileList.children).forEach(li => li.classList.remove('selected'));
-    overlay.classList.add('open');
+    Array.prototype.forEach.call(list.querySelectorAll(".file"), function (r) {
+      r.setAttribute("aria-selected", "false");
+    });
+    scrim.hidden = false;
+    var first = list.querySelector(".file");
+    if (first) first.focus();
   }
 
   function closePicker() {
-    overlay.classList.remove('open');
+    scrim.hidden = true;
+    chooseBtn.focus();
   }
 
-  function startUpload() {
-    statusText.textContent = '';
+  function confirm() {
+    if (!selected) return;
     closePicker();
-    if (uploadTimer) {
-      clearTimeout(uploadTimer);
-    }
-    uploadTimer = setTimeout(() => {
-      statusText.textContent = 'Done';
-      uploadTimer = null;
+    uploading = true;
+    done.classList.remove("on");
+    timer = setTimeout(function () {
+      uploading = false;
+      done.classList.add("on");
     }, 3000);
   }
 
-  chooseBtn.addEventListener('click', openPicker);
-
-  cancelBtn.addEventListener('click', closePicker);
-
-  fileList.addEventListener('click', (event) => {
-    const li = event.target.closest('li');
-    if (!li) return;
-    Array.from(fileList.children).forEach(item => item.classList.remove('selected'));
-    li.classList.add('selected');
-    selectedItem = li;
-    openBtn.disabled = false;
+  chooseBtn.addEventListener("click", openPicker);
+  cancelBtn.addEventListener("click", closePicker);
+  openBtn.addEventListener("click", confirm);
+  scrim.addEventListener("mousedown", function (e) { if (e.target === scrim) closePicker(); });
+  document.addEventListener("keydown", function (e) {
+    if (scrim.hidden) return;
+    if (e.key === "Escape") closePicker();
+    if (e.key === "Enter" && selected && document.activeElement !== cancelBtn) { e.preventDefault(); confirm(); }
   });
-
-  fileList.addEventListener('dblclick', (event) => {
-    const li = event.target.closest('li');
-    if (!li) return;
-    selectedItem = li;
-    startUpload();
-  });
-
-  openBtn.addEventListener('click', () => {
-    if (!selectedItem) return;
-    startUpload();
-  });
-
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      closePicker();
-    }
-  });
+})();
 </script>
-
 </body>
 </html>

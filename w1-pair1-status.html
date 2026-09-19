@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile settings</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --ok: #15803d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .stage {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 40px;
+  }
+  .rule { background: var(--border); }
+  .caption {
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .card h2 { margin: 0 0 20px; font-size: 24px; }
+  .field { margin-bottom: 18px; }
+  label { display: block; margin-bottom: 6px; font-weight: 600; }
+  input[type="text"] {
+    width: 100%;
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+  }
+  input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .actions { margin-top: 24px; display: flex; align-items: center; min-height: 52px; }
+  button.save {
+    font: inherit;
+    font-weight: 600;
+    min-width: 170px;
+    height: 52px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  button.save:hover:not(:disabled) { background: var(--accent-dark); }
+  button.save:disabled { cursor: default; opacity: 0.85; }
+  button.save.done { background: var(--ok); opacity: 1; }
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .check { width: 22px; height: 22px; }
+  @media (max-width: 800px) {
+    .stage { grid-template-columns: 1fr; }
+    .rule { width: 100%; height: 1px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <section>
+    <p class="caption">Version A</p>
+    <form class="card" id="form-a" autocomplete="off">
+      <h2>Profile settings</h2>
+      <div class="field">
+        <label for="a-name">Display name</label>
+        <input type="text" id="a-name" value="Jordan Ellis">
+      </div>
+      <div class="field">
+        <label for="a-email">Email address</label>
+        <input type="text" id="a-email" value="jordan.ellis@example.com">
+      </div>
+      <div class="field">
+        <label for="a-city">City</label>
+        <input type="text" id="a-city" value="Leeds">
+      </div>
+      <div class="actions">
+        <button type="submit" class="save" id="save-a">Save changes</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="rule" aria-hidden="true"></div>
+
+  <section>
+    <p class="caption">Version B</p>
+    <form class="card" id="form-b" autocomplete="off">
+      <h2>Profile settings</h2>
+      <div class="field">
+        <label for="b-name">Display name</label>
+        <input type="text" id="b-name" value="Jordan Ellis">
+      </div>
+      <div class="field">
+        <label for="b-email">Email address</label>
+        <input type="text" id="b-email" value="jordan.ellis@example.com">
+      </div>
+      <div class="field">
+        <label for="b-city">City</label>
+        <input type="text" id="b-city" value="Leeds">
+      </div>
+      <div class="actions">
+        <button type="submit" class="save" id="save-b">Save changes</button>
+      </div>
+    </form>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var CHECK_SVG =
+    '<svg class="check" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<polyline points="4 12 10 18 20 6"></polyline></svg>';
+
+  function values(prefix) {
+    return {
+      name: document.getElementById(prefix + '-name').value,
+      email: document.getElementById(prefix + '-email').value,
+      city: document.getElementById(prefix + '-city').value
+    };
+  }
+
+  var formA = document.getElementById('form-a');
+  formA.addEventListener('submit', function (e) {
+    e.preventDefault();
+    console.log('Settings saved (A):', values('a'));
+  });
+
+  var formB = document.getElementById('form-b');
+  var btnB = document.getElementById('save-b');
+  var busy = false;
+  formB.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (busy) return;
+    busy = true;
+    var data = values('b');
+    btnB.disabled = true;
+    btnB.innerHTML = '<span class="spinner" aria-hidden="true"></span>';
+    setTimeout(function () {
+      console.log('Settings saved (B):', data);
+      btnB.classList.add('done');
+      btnB.innerHTML = CHECK_SVG + '<span>Saved</span>';
+      setTimeout(function () {
+        btnB.classList.remove('done');
+        btnB.textContent = 'Save changes';
+        btnB.disabled = false;
+        busy = false;
+      }, 2000);
+    }, 800);
+  });
+})();
+</script>
+</body>
+</html>

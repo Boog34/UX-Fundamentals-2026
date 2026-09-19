@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product page</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --danger: #c62828;
+    --ok: #15803d;
+    --off: #b3bac4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .stage {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 40px;
+  }
+  .rule { background: var(--border); }
+  .caption {
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .product { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+  .thumb {
+    width: 72px;
+    height: 72px;
+    flex: none;
+    border-radius: 10px;
+    background: #e8efff;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+  .product h2 { margin: 0; font-size: 24px; }
+  .product .price { margin: 2px 0 0; font-weight: 600; }
+  .stock { margin: 0 0 20px; color: var(--ok); font-weight: 600; }
+  .label { display: block; margin-bottom: 6px; font-weight: 600; }
+
+  .qty-row { display: flex; align-items: center; height: 52px; }
+  input.qty {
+    width: 140px;
+    height: 52px;
+    font: inherit;
+    text-align: center;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+  }
+  input.qty:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input.qty.invalid { border: 2px solid var(--danger); }
+
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    height: 52px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .stepper button {
+    width: 52px;
+    height: 100%;
+    border: 0;
+    background: #fff;
+    font: inherit;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .stepper button:hover:not(:disabled) { background: #f3f4f6; }
+  .stepper button:disabled { color: var(--off); background: #f6f7f9; cursor: not-allowed; }
+  .stepper button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .stepper .value {
+    min-width: 56px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .actions { margin-top: 24px; }
+  button.primary {
+    font: inherit;
+    font-weight: 600;
+    height: 52px;
+    min-width: 170px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  .message { margin: 16px 0 0; min-height: 26px; }
+  .message.error { color: var(--danger); }
+  .message.ok { color: var(--ok); font-weight: 600; }
+
+  @media (max-width: 800px) {
+    .stage { grid-template-columns: 1fr; }
+    .rule { width: 100%; height: 1px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <section>
+    <p class="caption">Version A</p>
+    <form class="card" id="form-b" novalidate autocomplete="off">
+      <div class="product">
+        <div class="thumb" aria-hidden="true">&#9749;</div>
+        <div>
+          <h2>Stoneware mug</h2>
+          <p class="price">&euro;14.00</p>
+        </div>
+      </div>
+      <p class="stock">12 in stock</p>
+      <span class="label" id="b-label">Quantity</span>
+      <div class="qty-row">
+        <div class="stepper" role="group" aria-labelledby="b-label">
+          <button type="button" id="minus" aria-label="Decrease quantity">&minus;</button>
+          <span class="value" id="b-value" aria-live="polite">1</span>
+          <button type="button" id="plus" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">Add to basket</button>
+      </div>
+      <p class="message" id="msg-b" role="status"></p>
+    </form>
+  </section>
+
+  <div class="rule" aria-hidden="true"></div>
+
+  <section>
+    <p class="caption">Version B</p>
+    <form class="card" id="form-a" novalidate autocomplete="off">
+      <div class="product">
+        <div class="thumb" aria-hidden="true">&#9749;</div>
+        <div>
+          <h2>Stoneware mug</h2>
+          <p class="price">&euro;14.00</p>
+        </div>
+      </div>
+      <p class="stock">12 in stock</p>
+      <label class="label" for="a-qty">Quantity</label>
+      <div class="qty-row">
+        <input class="qty" type="text" id="a-qty" value="1" inputmode="numeric">
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">Add to basket</button>
+      </div>
+      <p class="message" id="msg-a" role="status"></p>
+    </form>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var MAX = 12;
+
+  var inputA = document.getElementById('a-qty');
+  var msgA = document.getElementById('msg-a');
+  document.getElementById('form-a').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = inputA.value.trim();
+    var n = /^-?\d+$/.test(text) ? parseInt(text, 10) : NaN;
+    if (isNaN(n) || n < 1 || n > MAX) {
+      inputA.classList.add('invalid');
+      msgA.className = 'message error';
+      msgA.textContent = 'Quantity must be between 1 and ' + MAX;
+    } else {
+      inputA.classList.remove('invalid');
+      msgA.className = 'message ok';
+      msgA.textContent = n + (n === 1 ? ' item' : ' items') + ' added to your basket.';
+    }
+  });
+
+  var qty = 1;
+  var minus = document.getElementById('minus');
+  var plus = document.getElementById('plus');
+  var value = document.getElementById('b-value');
+  var msgB = document.getElementById('msg-b');
+
+  function sync() {
+    value.textContent = String(qty);
+    minus.disabled = qty <= 1;
+    plus.disabled = qty >= MAX;
+  }
+  minus.addEventListener('click', function () { if (qty > 1) { qty -= 1; msgB.textContent = ''; sync(); } });
+  plus.addEventListener('click', function () { if (qty < MAX) { qty += 1; msgB.textContent = ''; sync(); } });
+
+  document.getElementById('form-b').addEventListener('submit', function (e) {
+    e.preventDefault();
+    msgB.className = 'message ok';
+    msgB.textContent = qty + (qty === 1 ? ' item' : ' items') + ' added to your basket.';
+  });
+
+  sync();
+})();
+</script>
+</body>
+</html>

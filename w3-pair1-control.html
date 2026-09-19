@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile setup</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --accent-dark: #1d4ed8;
+    --backdrop: rgba(31, 41, 51, 0.55);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .stage {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 40px;
+  }
+  .rule { background: var(--border); }
+  .caption {
+    font-size: 18px;
+    color: var(--muted);
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .frame {
+    position: relative;
+    height: 520px;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .page { padding: 28px; }
+  .page h2 { margin: 0 0 8px; font-size: 24px; }
+  .page p { margin: 0 0 20px; color: var(--muted); }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--backdrop);
+  }
+  .overlay[hidden] { display: none; }
+  .modal {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  }
+  .modal h3 { margin: 0 0 4px; font-size: 24px; padding-right: 40px; }
+  .modal .step { margin: 0 0 20px; color: var(--muted); }
+  .close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .close:hover { background: #eceff3; color: var(--text); }
+  .body { min-height: 150px; }
+  label { display: block; margin-bottom: 6px; font-weight: 600; }
+  input {
+    width: 100%;
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .photo {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 12px;
+    border: 2px dashed var(--border);
+    border-radius: 50%;
+    background: #f9fafb;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .photo.set {
+    border: 0;
+    background: var(--accent);
+    color: #fff;
+    font-size: 44px;
+    font-weight: 700;
+  }
+  .photo-note { text-align: center; color: var(--muted); margin: 0; }
+  .summary { margin: 0; }
+  .summary div { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .summary dt { width: 90px; color: var(--muted); }
+  .summary dd { margin: 0; font-weight: 600; }
+  .buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    min-height: 52px;
+  }
+  button.primary {
+    margin-left: auto;
+    font: inherit;
+    font-weight: 600;
+    height: 52px;
+    min-width: 120px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.secondary {
+    font: inherit;
+    font-weight: 600;
+    height: 52px;
+    min-width: 100px;
+    padding: 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button.secondary:hover { background: #f3f4f6; }
+
+  @media (max-width: 800px) {
+    .stage { grid-template-columns: 1fr; }
+    .rule { width: 100%; height: 1px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <section>
+    <p class="caption">Version A</p>
+    <div class="frame" id="frame-a"></div>
+  </section>
+  <div class="rule" aria-hidden="true"></div>
+  <section>
+    <p class="caption">Version B</p>
+    <div class="frame" id="frame-b"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var TITLES = ['Your name', 'Your photo', 'All done?'];
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function build(frame, withControls) {
+    var state = { step: 0, name: '', photo: false, finished: false };
+
+    // Page behind the modal
+    var page = el('div', 'page');
+    var pageTitle = el('h2', null, 'Welcome');
+    var pageText = el('p', null, 'Set up your profile to get started.');
+    var pageButton = el('button', 'primary', 'Set up your profile');
+    pageButton.type = 'button';
+    pageButton.style.marginLeft = '0';
+    page.appendChild(pageTitle);
+    page.appendChild(pageText);
+    page.appendChild(pageButton);
+
+    // Modal
+    var overlay = el('div', 'overlay');
+    var modal = el('div', 'modal');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    var title = el('h3');
+    var stepText = el('p', 'step');
+    var body = el('div', 'body');
+    var buttons = el('div', 'buttons');
+    var closeBtn = null;
+
+    if (withControls) {
+      closeBtn = el('button', 'close', '×');
+      closeBtn.type = 'button';
+      closeBtn.setAttribute('aria-label', 'Close');
+      modal.appendChild(closeBtn);
+    }
+    modal.appendChild(title);
+    modal.appendChild(stepText);
+    modal.appendChild(body);
+    modal.appendChild(buttons);
+    overlay.appendChild(modal);
+    frame.appendChild(page);
+    frame.appendChild(overlay);
+
+    function render() {
+      title.textContent = TITLES[state.step];
+      stepText.textContent = 'Step ' + (state.step + 1) + ' of 3';
+      body.innerHTML = '';
+      buttons.innerHTML = '';
+
+      if (state.step === 0) {
+        var lbl = el('label', null, 'Full name');
+        lbl.setAttribute('for', frame.id + '-name');
+        var input = el('input');
+        input.type = 'text';
+        input.id = frame.id + '-name';
+        input.value = state.name;
+        input.autocomplete = 'off';
+        input.addEventListener('input', function () { state.name = input.value; });
+        body.appendChild(lbl);
+        body.appendChild(input);
+      } else if (state.step === 1) {
+        var photo = el('button', 'photo');
+        photo.type = 'button';
+        function paint() {
+          if (state.photo) {
+            photo.classList.add('set');
+            photo.textContent = (state.name.trim().charAt(0) || '?').toUpperCase();
+          } else {
+            photo.classList.remove('set');
+            photo.textContent = 'Add photo';
+          }
+        }
+        paint();
+        photo.addEventListener('click', function () { state.photo = !state.photo; paint(); });
+        body.appendChild(photo);
+        body.appendChild(el('p', 'photo-note', 'Click the circle to add or remove a photo.'));
+      } else {
+        var dl = el('dl', 'summary');
+        var rows = [
+          ['Name', state.name.trim() || 'No name entered'],
+          ['Photo', state.photo ? 'Added' : 'None']
+        ];
+        rows.forEach(function (r) {
+          var row = el('div');
+          row.appendChild(el('dt', null, r[0]));
+          row.appendChild(el('dd', null, r[1]));
+          dl.appendChild(row);
+        });
+        body.appendChild(dl);
+      }
+
+      if (withControls && state.step > 0) {
+        var back = el('button', 'secondary', 'Back');
+        back.type = 'button';
+        back.addEventListener('click', function () { state.step -= 1; render(); });
+        buttons.appendChild(back);
+      }
+      var next = el('button', 'primary', state.step === 2 ? 'Finish' : 'Next');
+      next.type = 'button';
+      next.addEventListener('click', function () {
+        if (state.step < 2) {
+          state.step += 1;
+          render();
+        } else {
+          state.finished = true;
+          overlay.hidden = true;
+          pageTitle.textContent = 'You’re all set';
+          pageText.textContent = state.name.trim()
+            ? 'Your profile is ready, ' + state.name.trim() + '.'
+            : 'Your profile is ready.';
+          pageButton.textContent = 'Start again';
+        }
+      });
+      buttons.appendChild(next);
+    }
+
+    function open() {
+      if (state.finished) {
+        state.name = '';
+        state.photo = false;
+        state.finished = false;
+      }
+      state.step = 0;
+      overlay.hidden = false;
+      render();
+    }
+
+    pageButton.addEventListener('click', open);
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        overlay.hidden = true;
+        pageTitle.textContent = 'Welcome';
+        pageText.textContent = 'Set up your profile to get started.';
+        pageButton.textContent = 'Set up your profile';
+      });
+    }
+
+    render();
+  }
+
+  build(document.getElementById('frame-a'), false);
+  build(document.getElementById('frame-b'), true);
+})();
+</script>
+</body>
+</html>

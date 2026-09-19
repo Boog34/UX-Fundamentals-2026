@@ -3,192 +3,163 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prototype</title>
+<title>Delivery address – Harbour Home Delivery</title>
 <style>
   :root {
-    --bg: #f3f5f9;
-    --card: #ffffff;
-    --ink: #1c2333;
-    --muted: #5d6679;
-    --line: #cfd6e4;
-    --accent: #2f5bea;
-    --accent-dark: #2448c4;
-    --red: #c62828;
-    --green: #1e7a46;
+    --teal: #0f766e;
+    --teal-dark: #0b5a54;
+    --teal-tint: #e3f1ef;
+    --bg: #faf8f4;
+    --ink: #1f2a2a;
+    --muted: #5d6b6a;
+    --line: #cfd8d6;
+    --error: #b3261e;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html { font-size: 18px; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 18px;
-    line-height: 1.5;
-    color: var(--ink);
     background: var(--bg);
-    display: flex;
-    flex-direction: column;
+    color: var(--ink);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.45;
   }
   header {
-    background: var(--card);
-    border-bottom: 1px solid #dde2ec;
-    padding: 16px 32px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .mark {
-    width: 34px; height: 34px;
-    border-radius: 9px;
-    background: var(--accent);
-    display: grid; place-items: center;
-    color: #fff; font-weight: 700; font-size: 18px;
-  }
-  .brand { font-weight: 650; font-size: 20px; }
-  .side { margin-left: auto; color: var(--muted); }
-
-  main {
-    flex: 1;
-    display: grid;
-    place-items: center;
-    padding: 32px 20px;
-  }
-  .card {
-    width: 100%;
-    max-width: 480px;
-    background: var(--card);
-    border: 1px solid #dde2ec;
-    border-radius: 16px;
-    padding: 36px;
-    box-shadow: 0 1px 2px rgba(20, 30, 60, 0.04), 0 8px 24px rgba(20, 30, 60, 0.05);
-  }
-  h1 { margin: 0 0 6px; font-size: 28px; line-height: 1.25; }
-  .lead { margin: 0 0 28px; color: var(--muted); }
-
-  label { display: block; font-weight: 600; margin-bottom: 8px; }
-  .field { position: relative; }
-  input[type="password"], input[type="text"] {
-    width: 100%;
-    font: inherit;
-    color: var(--ink);
     background: #fff;
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 12px 74px 12px 14px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    border-bottom: 4px solid var(--teal);
+    padding: 14px 32px 12px;
   }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #d5defc; }
-
-  .peek {
-    position: absolute;
-    right: 8px; top: 50%;
-    transform: translateY(-50%);
-    font: inherit;
-    font-size: 16px;
-    color: var(--accent);
-    background: none;
-    border: 0;
+  .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--teal-dark);
+    letter-spacing: 0.01em;
+  }
+  .section-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 32px 64px;
+  }
+  h1 {
+    font-size: 1.9rem;
+    margin: 0 0 6px;
+  }
+  .intro {
+    margin: 0 0 28px;
+    color: var(--muted);
+  }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--teal);
     border-radius: 6px;
-    padding: 4px 8px;
-    cursor: pointer;
+    padding: 28px 32px 32px;
   }
-  .peek:hover { background: #eef2fd; }
-  .peek:focus-visible { outline: 3px solid #a9bcf7; }
-
-  .message {
-    min-height: 26px;
-    margin: 10px 0 0;
-    font-size: 16px;
+  .field { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
   }
-  .message ul { margin: 0; padding-left: 20px; }
-  .message.bad { color: var(--red); }
-  .message.good { color: var(--green); }
-
-  button.primary {
+  input[type="text"] {
     width: 100%;
-    margin-top: 12px;
+    max-width: 420px;
+    font: inherit;
+    padding: 10px 12px;
+    border: 1.5px solid #9fb0ad;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  input[type="text"]:focus {
+    outline: 3px solid var(--teal-tint);
+    border-color: var(--teal);
+  }
+  .field.eircode input { max-width: 200px; }
+  .msg {
+    min-height: 3.1em;
+    margin-top: 6px;
+    font-size: 18px;
+    line-height: 1.4;
+    color: var(--error);
+  }
+  button {
     font: inherit;
     font-weight: 600;
+    background: var(--teal);
     color: #fff;
-    background: var(--accent);
     border: 0;
-    border-radius: 10px;
-    padding: 13px 20px;
+    border-radius: 4px;
+    padding: 11px 26px;
     cursor: pointer;
-    transition: background 0.15s;
   }
-  button.primary:hover { background: var(--accent-dark); }
-  button.primary:focus-visible { outline: 3px solid #a9bcf7; outline-offset: 2px; }
+  button:hover { background: var(--teal-dark); }
+  button:focus-visible { outline: 3px solid var(--teal-tint); outline-offset: 2px; }
+  .done {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--teal-dark);
+    padding: 12px 0;
+  }
 </style>
 </head>
 <body>
-  <header>
-    <div class="mark">N</div>
-    <div class="brand">Northfield College</div>
-    <div class="side">Student portal</div>
-  </header>
+<header>
+  <div class="brand">Harbour Home Delivery</div>
+  <div class="section-label">My account</div>
+</header>
 
-  <main>
-    <form class="card" id="form" novalidate>
-      <h1>Set a new password</h1>
-      <p class="lead">Choose the password you'll use to sign in from now on.</p>
+<main>
+  <h1>Delivery address</h1>
+  <p class="intro">Where should we bring your orders?</p>
 
-      <label for="pw">New password</label>
+  <div class="panel" id="panel">
+    <form id="addr-form" novalidate autocomplete="off">
       <div class="field">
-        <input type="password" id="pw" name="pw" autocomplete="new-password" aria-describedby="note">
-        <button type="button" class="peek" id="peek">Show</button>
+        <label for="line1">Address line 1</label>
+        <input type="text" id="line1" name="line1" value="14 Mill Lane">
       </div>
-      <div class="message" id="note" role="alert"></div>
-
-      <button type="submit" class="primary">Save</button>
+      <div class="field">
+        <label for="town">Town</label>
+        <input type="text" id="town" name="town" value="Ashbourne">
+      </div>
+      <div class="field eircode">
+        <label for="eircode">Eircode</label>
+        <input type="text" id="eircode" name="eircode" aria-describedby="eircode-msg">
+        <div class="msg" id="eircode-msg" role="alert"></div>
+      </div>
+      <button type="submit">Save address</button>
     </form>
-  </main>
+  </div>
+</main>
 
 <script>
-  (function () {
-    var form = document.getElementById('form');
-    var pw = document.getElementById('pw');
-    var note = document.getElementById('note');
-    var peek = document.getElementById('peek');
+(function () {
+  var form = document.getElementById('addr-form');
+  var panel = document.getElementById('panel');
+  var input = document.getElementById('eircode');
+  var msg = document.getElementById('eircode-msg');
+  var pattern = /^(?:[A-Z][0-9]{2}|D6W) ?[A-Z0-9]{4}$/i;
 
-    // check the password only when Save is clicked
-    form.addEventListener('submit', function (event) {
-      event.preventDefault();
-      var value = pw.value;
-      var broken = [];
-      if (value.length < 8) {
-        broken.push('Must be at least 8 characters.');
-      }
-      if (!/[0-9]/.test(value)) {
-        broken.push('Must include at least one number.');
-      }
-
-      note.textContent = '';
-      if (broken.length === 0) {
-        note.className = 'message good';
-        note.textContent = 'Password saved.';
-        return;
-      }
-
-      var list = document.createElement('ul');
-      broken.forEach(function (text) {
-        var item = document.createElement('li');
-        item.textContent = text;
-        list.appendChild(item);
-      });
-      note.className = 'message bad';
-      note.appendChild(list);
-      pw.focus();
-    });
-
-    // toggle the typed characters on and off
-    peek.addEventListener('click', function () {
-      var hidden = pw.type === 'password';
-      pw.type = hidden ? 'text' : 'password';
-      peek.textContent = hidden ? 'Hide' : 'Show';
-      pw.focus();
-    });
-  })();
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    msg.textContent = '';
+    var value = input.value.trim();
+    if (!pattern.test(value)) {
+      msg.textContent = 'Enter a valid Eircode: 7 characters, for example D02 X285.';
+      return;
+    }
+    panel.innerHTML = '<div class="done">Address saved.</div>';
+  });
+})();
 </script>
 </body>
 </html>

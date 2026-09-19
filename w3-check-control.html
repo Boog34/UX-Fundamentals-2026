@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --border: #cfd5dd;
+    --accent: #2563eb;
+    --track-off: #b8c0cc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 48px 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card h1 {
+    margin: 0;
+    padding: 22px 24px;
+    font-size: 26px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { border-bottom: 1px solid var(--border); }
+  .rows li:last-child { border-bottom: 0; }
+  .menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border: 0;
+    background: #fff;
+    font: inherit;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+  .menu-item:hover { background: #f3f4f6; }
+  .menu-item .chev { color: var(--muted); font-size: 24px; }
+  .menu-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 24px;
+  }
+  .setting .name { font-weight: 600; }
+  .setting .detail { color: var(--muted); }
+
+  .switch {
+    position: relative;
+    width: 64px;
+    height: 36px;
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background: var(--track-off);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .switch .knob {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+  }
+  .switch.on { background: var(--accent); }
+  .switch.on .knob { transform: translateX(28px); }
+</style>
+</head>
+<body>
+<main class="card" id="app"></main>
+
+<script>
+(function () {
+  var SECTIONS = [
+    {
+      name: 'Account',
+      rows: [
+        { label: 'Email address', detail: 'jordan.ellis@example.com' },
+        { label: 'Password', detail: 'Last changed 3 months ago' },
+        { label: 'Two-step sign-in', toggle: false }
+      ]
+    },
+    {
+      name: 'Privacy',
+      rows: [
+        { label: 'Show my profile to others', toggle: true },
+        { label: 'Show when I’m online', toggle: false },
+        { label: 'Allow tagging in photos', toggle: true }
+      ]
+    },
+    {
+      name: 'Notifications',
+      rows: [
+        { label: 'Email updates', toggle: true },
+        { label: 'Push notifications', toggle: true },
+        { label: 'Weekly summary', toggle: false }
+      ]
+    }
+  ];
+
+  var app = document.getElementById('app');
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function showMenu() {
+    app.innerHTML = '';
+    app.appendChild(el('h1', null, 'Settings'));
+    var ul = el('ul', 'rows');
+    SECTIONS.forEach(function (section) {
+      var li = el('li');
+      var btn = el('button', 'menu-item');
+      btn.type = 'button';
+      btn.appendChild(el('span', null, section.name));
+      btn.appendChild(el('span', 'chev', '›'));
+      btn.addEventListener('click', function () { showSection(section); });
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+    app.appendChild(ul);
+  }
+
+  function showSection(section) {
+    app.innerHTML = '';
+    app.appendChild(el('h1', null, section.name));
+    var ul = el('ul', 'rows');
+    section.rows.forEach(function (row) {
+      var li = el('li', 'setting');
+      var left = el('div');
+      left.appendChild(el('div', 'name', row.label));
+      if (row.detail) left.appendChild(el('div', 'detail', row.detail));
+      li.appendChild(left);
+      if (typeof row.toggle === 'boolean') {
+        var sw = el('button', 'switch' + (row.toggle ? ' on' : ''));
+        sw.type = 'button';
+        sw.setAttribute('role', 'switch');
+        sw.setAttribute('aria-checked', String(row.toggle));
+        sw.setAttribute('aria-label', row.label);
+        sw.appendChild(el('span', 'knob'));
+        sw.addEventListener('click', function () {
+          row.toggle = !row.toggle;
+          sw.classList.toggle('on', row.toggle);
+          sw.setAttribute('aria-checked', String(row.toggle));
+        });
+        li.appendChild(sw);
+      }
+      ul.appendChild(li);
+    });
+    app.appendChild(ul);
+  }
+
+  showMenu();
+})();
+</script>
+</body>
+</html>
