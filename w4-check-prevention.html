@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+  :root {
+    --bg: #f3f5f9;
+    --card: #ffffff;
+    --ink: #1c2333;
+    --muted: #5d6679;
+    --line: #cfd6e4;
+    --accent: #2f5bea;
+    --accent-dark: #2448c4;
+    --red: #c62828;
+    --green: #1e7a46;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid #dde2ec;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mark {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: var(--accent);
+    display: grid; place-items: center;
+    color: #fff; font-weight: 700; font-size: 18px;
+  }
+  .brand { font-weight: 650; font-size: 20px; }
+  .side { margin-left: auto; color: var(--muted); }
+
+  main {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+  }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border: 1px solid #dde2ec;
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 1px 2px rgba(20, 30, 60, 0.04), 0 8px 24px rgba(20, 30, 60, 0.05);
+  }
+  h1 { margin: 0 0 6px; font-size: 28px; line-height: 1.25; }
+  .lead { margin: 0 0 28px; color: var(--muted); }
+
+  label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .field { position: relative; }
+  input[type="password"], input[type="text"] {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 74px 12px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #d5defc; }
+
+  .peek {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    font: inherit;
+    font-size: 16px;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .peek:hover { background: #eef2fd; }
+  .peek:focus-visible { outline: 3px solid #a9bcf7; }
+
+  .message {
+    min-height: 26px;
+    margin: 10px 0 0;
+    font-size: 16px;
+  }
+  .message ul { margin: 0; padding-left: 20px; }
+  .message.bad { color: var(--red); }
+  .message.good { color: var(--green); }
+
+  button.primary {
+    width: 100%;
+    margin-top: 12px;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: 10px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.primary:focus-visible { outline: 3px solid #a9bcf7; outline-offset: 2px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="mark">N</div>
+    <div class="brand">Northfield College</div>
+    <div class="side">Student portal</div>
+  </header>
+
+  <main>
+    <form class="card" id="form" novalidate>
+      <h1>Set a new password</h1>
+      <p class="lead">Choose the password you'll use to sign in from now on.</p>
+
+      <label for="pw">New password</label>
+      <div class="field">
+        <input type="password" id="pw" name="pw" autocomplete="new-password" aria-describedby="note">
+        <button type="button" class="peek" id="peek">Show</button>
+      </div>
+      <div class="message" id="note" role="alert"></div>
+
+      <button type="submit" class="primary">Save</button>
+    </form>
+  </main>
+
+<script>
+  (function () {
+    var form = document.getElementById('form');
+    var pw = document.getElementById('pw');
+    var note = document.getElementById('note');
+    var peek = document.getElementById('peek');
+
+    // check the password only when Save is clicked
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var value = pw.value;
+      var broken = [];
+      if (value.length < 8) {
+        broken.push('Must be at least 8 characters.');
+      }
+      if (!/[0-9]/.test(value)) {
+        broken.push('Must include at least one number.');
+      }
+
+      note.textContent = '';
+      if (broken.length === 0) {
+        note.className = 'message good';
+        note.textContent = 'Password saved.';
+        return;
+      }
+
+      var list = document.createElement('ul');
+      broken.forEach(function (text) {
+        var item = document.createElement('li');
+        item.textContent = text;
+        list.appendChild(item);
+      });
+      note.className = 'message bad';
+      note.appendChild(list);
+      pw.focus();
+    });
+
+    // toggle the typed characters on and off
+    peek.addEventListener('click', function () {
+      var hidden = pw.type === 'password';
+      pw.type = hidden ? 'text' : 'password';
+      peek.textContent = hidden ? 'Hide' : 'Show';
+      pw.focus();
+    });
+  })();
+</script>
+</body>
+</html>

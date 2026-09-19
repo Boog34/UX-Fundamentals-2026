@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype</title>
+<style>
+  :root {
+    --bg: #f3f5f9;
+    --card: #ffffff;
+    --ink: #1c2333;
+    --muted: #5d6679;
+    --line: #cfd6e4;
+    --accent: #2f5bea;
+    --accent-dark: #2448c4;
+    --red: #c62828;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid #dde2ec;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mark {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: var(--accent);
+    display: grid; place-items: center;
+    color: #fff; font-weight: 700; font-size: 18px;
+  }
+  .brand { font-weight: 650; font-size: 20px; }
+  .side { margin-left: auto; color: var(--muted); }
+
+  main {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+  }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border: 1px solid #dde2ec;
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 1px 2px rgba(20, 30, 60, 0.04), 0 8px 24px rgba(20, 30, 60, 0.05);
+  }
+  h1 { margin: 0 0 6px; font-size: 28px; line-height: 1.25; }
+  .lead { margin: 0 0 28px; color: var(--muted); }
+
+  label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .field { position: relative; }
+  input[type="password"], input[type="text"] {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 74px 12px 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #d5defc; }
+  input.invalid { border-color: var(--red); }
+  input.invalid:focus { border-color: var(--red); box-shadow: 0 0 0 3px #f6d3d3; }
+
+  .peek {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    font: inherit;
+    font-size: 16px;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .peek:hover { background: #eef2fd; }
+  .peek:focus-visible { outline: 3px solid #a9bcf7; }
+
+  .message {
+    min-height: 26px;
+    margin: 8px 0 0;
+    font-size: 16px;
+    color: var(--red);
+  }
+
+  button.primary {
+    width: 100%;
+    margin-top: 12px;
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: 10px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.primary:hover { background: var(--accent-dark); }
+  button.primary:focus-visible { outline: 3px solid #a9bcf7; outline-offset: 2px; }
+
+  .foot { margin: 22px 0 0; text-align: center; color: var(--muted); }
+  .foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .foot a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="mark">N</div>
+    <div class="brand">Northfield College</div>
+    <div class="side">Student portal</div>
+  </header>
+
+  <main>
+    <form class="card" id="form" novalidate>
+      <h1>Create account</h1>
+      <p class="lead">Set up your portal login to see timetables and hand in work.</p>
+
+      <label for="pw">Password</label>
+      <div class="field">
+        <input type="password" id="pw" name="pw" autocomplete="new-password" aria-describedby="note">
+        <button type="button" class="peek" id="peek">Show</button>
+      </div>
+      <p class="message" id="note" role="alert"></p>
+
+      <button type="submit" class="primary">Create account</button>
+
+      <p class="foot">Already have an account? <a href="#" id="signin">Sign in</a></p>
+    </form>
+  </main>
+
+<script>
+  (function () {
+    var form = document.getElementById('form');
+    var pw = document.getElementById('pw');
+    var note = document.getElementById('note');
+    var peek = document.getElementById('peek');
+    var signin = document.getElementById('signin');
+
+    // handle form submit: always rejected
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      pw.classList.add('invalid');
+      pw.setAttribute('aria-invalid', 'true');
+      note.textContent = 'Invalid password.';
+      pw.focus();
+    });
+
+    // toggle the typed characters on and off
+    peek.addEventListener('click', function () {
+      var hidden = pw.type === 'password';
+      pw.type = hidden ? 'text' : 'password';
+      peek.textContent = hidden ? 'Hide' : 'Show';
+      pw.focus();
+    });
+
+    // the sign-in link does nothing in this demo
+    signin.addEventListener('click', function (event) {
+      event.preventDefault();
+    });
+  })();
+</script>
+</body>
+</html>
